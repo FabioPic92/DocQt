@@ -12,7 +12,9 @@ from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
 
 from model.model import Model
-from model.AnalyzeDocument import Analysis
+from model.AnalyzeDocument import processing_image
+
+output_file_path = 'output.txt' 
 
 class MainPage(AbstractPage):
 
@@ -46,12 +48,11 @@ class MainPage(AbstractPage):
     def load_analyze_file(self):
         if self.documentData.image is None:
             self.load_file()
-            self.model = Model('textextractbucket2', self.documentData)
+            self.model = Model('textextractbucket2', self.documentData)        
         else :
             self.analyze_image()
             self.switch_page(pageIndex["Analyze"])
 
-    # Da sistemare
     @pyqtSlot()
     def load_file(self):
         self.fileName, _ = QFileDialog.getOpenFileName(self, "Open Document", "", "Image files (*.jpg *.png)")
@@ -109,7 +110,7 @@ class MainPage(AbstractPage):
         self.model.analyze_document()
 
     def postProcessing(self):
-        pass
+        processing_image(self.documentData, output_file_path)
 
     def update_ui(self):
         if self.documentData.image is None:
