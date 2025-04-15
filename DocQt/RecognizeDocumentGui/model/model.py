@@ -1,8 +1,7 @@
 import boto3
 import time
 
-
-
+#Sistemare Path File
 class Model:
     def __init__(self, bucket):
         self.textract = boto3.client('textract')
