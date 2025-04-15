@@ -1,0 +1,8 @@
+import argparse
+import json
+from PIL import Image, ImageDraw
+
+# Parser degli argomenti da riga di comando
+parser = argparse.ArgumentParser(description="Carica un'immagine e un file JSON.")
+parser.add_argument('--image', type=str, required=True, help='Path dell\'immagine')
+parser.add_argument('--json', type=str, required=True, help='Path del file JSON')

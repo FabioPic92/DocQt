@@ -13,6 +13,7 @@ from page.AnalyzePage import AnalyzePage
 from page.ResultPage import ResultPage
 
 from model.struct import DocumentData
+from draw import draw_lines,
 
 class RecognizeDocumentGui(QtWidgets.QMainWindow):
         def __init__(self):

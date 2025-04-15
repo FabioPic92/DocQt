@@ -4,24 +4,27 @@ from PDF import PDF
 
 output_file_path = 'output.txt' 
 
-def searchBlockPage(data):
+# search Block Page in json image
+def search_block_page(data):
     page_blocks = [block for block in data["Blocks"] if block["BlockType"] == "PAGE"]
 
-def searchBlockLines(data):
+# search Block Line in json image
+def search_block_lines(data):
     line_blocks = [block for block in data["Blocks"] if block["BlockType"] == "LINE"]
     return line_blocks
 
-def searchIds(data):
+# Convert Json in a vector
+def search_ids(data):
     page_ids = [relationship["Ids"] for block in data["Blocks"] 
             if block["BlockType"] == "PAGE" and "Relationships" in block
             for relationship in block["Relationships"] if "Ids" in relationship]
-
 
     flat_page_ids = [item for sublist in page_ids for item in sublist]
     print(len(flat_page_ids))
     return flat_page_ids 
 
-def printTextOfLinesMatchingIds(data, page_ids):
+# Print number of blocks
+def print_text_of_lines_matching_ids(data, page_ids):
     count = 0
     for block in data["Blocks"]:
         for block["Id"] in page_ids:
@@ -29,6 +32,7 @@ def printTextOfLinesMatchingIds(data, page_ids):
             count = count + 1
     print(count)
 
+# Da sistemare
 def AnalyzeDocument(pathFile, nameFile):
     # pathFile contiete il percorso alla cartella dove avviene il test
     jsonFile = nameFile + '.json'
@@ -42,12 +46,13 @@ def AnalyzeDocument(pathFile, nameFile):
     with open(pathJson, 'r') as file:
         data = json.load(file)
 
-    line_blocks = searchBlockLines(data)
+    line_blocks = search_block_lines(data)
 
     data_sort = sorted(line_blocks, key=lambda x: x['Geometry']['BoundingBox']['Top'])
 
     pdf = PDF(pathPdf)
 
+    # size horizontal == 600 and Vertical == 780
     for item in  data_sort:
         pdf.setText((item['Geometry']['BoundingBox']['Left']) * 600, (1-item['Geometry']['BoundingBox']['Top']) * 780, item['Text'])
     
