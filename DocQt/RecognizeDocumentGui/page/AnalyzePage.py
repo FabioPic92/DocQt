@@ -10,7 +10,9 @@ from PIL import Image
 class AnalyzePage(AbstractPage):
     def __init__(self, parent, documentData):
         super().__init__()
+        
         self.documentData = documentData
+
         self.draw_ui()
 
     def draw_ui(self):

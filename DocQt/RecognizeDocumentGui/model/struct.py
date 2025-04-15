@@ -6,6 +6,6 @@ from dataclasses import dataclass
 class DocumentData:
     filename: Optional[str] = None
     image: Optional[Image.Image] = None
-    ocr_text: Optional[str] = None
+    image_proc: Optional[Image.Image] = None
 
 listModelDocument = [] # Lista che memorizza i modelli dei documenti caricati 

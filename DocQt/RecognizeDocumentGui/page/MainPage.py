@@ -11,10 +11,14 @@ from pdf2image import convert_from_path
 from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
 
+from model.model import Model
+from model.AnalyzeDocument import Analysis
+
 class MainPage(AbstractPage):
 
     def __init__(self, parent, documentData):
         super().__init__()
+
         self.draw_ui()
         self.documentData = documentData
 
@@ -29,7 +33,7 @@ class MainPage(AbstractPage):
         self.layout.addWidget(self.imageLabel)
         
         self.LoadDocument = QPushButton("Load Document")
-        self.LoadDocument.clicked.connect(self.LoadAnalyzeFile)
+        self.LoadDocument.clicked.connect(self.load_analyze_file)
         self.layout.addWidget(self.LoadDocument)
 
         self.AddDocument = QPushButton("Add Layout Document")
@@ -39,41 +43,43 @@ class MainPage(AbstractPage):
         self.central_layout = QtWidgets.QGridLayout()
         central_wid.setLayout(self.central_layout)
 
-    def LoadAnalyzeFile(self):
+    def load_analyze_file(self):
         if self.documentData.image is None:
-            self.LoadFile()
+            self.load_file()
+            self.model = Model('textextractbucket2', self.documentData)
         else :
+            self.analyze_image()
             self.switch_page(pageIndex["Analyze"])
 
     # Da sistemare
     @pyqtSlot()
-    def LoadFile(self):
+    def load_file(self):
         self.fileName, _ = QFileDialog.getOpenFileName(self, "Open Document", "", "Image files (*.jpg *.png)")
         if self.fileName:
             if self.fileName.lower().endswith(('.jpg', '.jpeg', '.png','.pdf')):
-                self.LoadImage(self.fileName)
+                self.load_image(self.fileName)
         self.update_ui()
 
-    def LoadImage(self, fileName):
+    def load_image(self, fileName):
         if fileName.lower().endswith(('.jpg', '.jpeg', '.png')):
-            image = self.CorrectImageRotation(fileName)
+            image = self.correct_image_rotation(fileName)
         elif fileName.lower().endswith('.pdf'):
             images = convert_from_path(fileName)
             image = images[0]
         self.label.setText(f"Loaded: {os.path.basename(fileName)}")
         self.documentData.fileName = os.path.basename(self.fileName)
         self.documentData.image = image
-        pixmap = self.ImageToPixmap(image).scaled(400, 400, Qt.KeepAspectRatio)
+        pixmap = self.image_to_pixmap(image).scaled(400, 400, Qt.KeepAspectRatio)
         self.imageLabel.setPixmap(pixmap)
 
-    def ImageToPixmap(self, pilImage):
+    def image_to_pixmap(self, pilImage):
         if pilImage.mode != "RGB":
             pilImage = pilImage.convert("RGB")
         data = pilImage.tobytes("raw", "RGB")
         qimage = QImage(data, pilImage.width, pilImage.height, QImage.Format_RGB888)
         return QPixmap.fromImage(qimage)
 
-    def CorrectImageRotation(self, imagePath):
+    def correct_image_rotation(self, imagePath):
         image = Image.open(imagePath)
         try:
             for orientation in ExifTags.TAGS.keys():
@@ -94,14 +100,15 @@ class MainPage(AbstractPage):
             pass
         return image
     
-    def AnalyzeImage(self):
-        self.Preprocessing()
+    def analyze_image(self):
         self.Analyze()
-    
-    def Preprocessing(self):
-        pass
+        self.postProcessing()
 
-    def Analyze(self):
+    def analyze(self):
+        self.model.response()
+        self.model.analyze_document()
+
+    def postProcessing(self):
         pass
 
     def update_ui(self):
