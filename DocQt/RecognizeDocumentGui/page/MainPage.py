@@ -44,14 +44,19 @@ class MainPage(AbstractPage):
         central_wid.setLayout(self.central_layout)
 
     def load_analyze_file(self):
-        if self.documentData.image is None:
-            self.load_file()
-            self.model = Model('textextractbucket2', self.documentData)
-            self.model.upload_file()        
-        else :
-            self.analyze_image()
-            print(f"Entra {self.documentData.filename}")
-            self.switch_page(pageIndex["Analyze"])
+        self.documentData.filename = '/home/fpicciati/Downloads/20250223_180311.jpg'        
+        self.documentData.image = Image.open(self.documentData.filename)
+        processing_image(self.documentData)# Test
+        self.switch_page(pageIndex["Analyze"])
+
+        # if self.documentData.image is None:
+        #     self.load_file()
+        #     self.model = Model('textextractbucket2', self.documentData)
+        #     self.model.upload_file()        
+        # else :
+        #     self.analyze_image()
+        #     print(f"Entra {self.documentData.filename}")
+        #     self.switch_page(pageIndex["Analyze"])
 
     @pyqtSlot()
     def load_file(self):

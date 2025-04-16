@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap, QImage
 from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
 
-from PIL import Image
+from PIL import Image, ExifTags
 
 class AnalyzePage(AbstractPage):
     def __init__(self, parent, documentData):
@@ -32,18 +32,19 @@ class AnalyzePage(AbstractPage):
         self.scroll_area.setWidgetResizable(True)
         self.layout.addWidget(self.scroll_area)
 
-        self.showResultButtton = QPushButton("Show Result")
-        #self.ShowResultButtton.clicked.connect()
-        self.layout.addWidget(self.showResultButtton)
+        self.show_result_button = QPushButton("Show Result")
+        self.show_result_button.clicked.connect(self.show_result)
+        self.layout.addWidget(self.show_result_button)
 
-        self.cancelAnalyzeButton = QPushButton("Cancel Analyze")
-        self.cancelAnalyzeButton.clicked.connect(self.cancel_analyze)
-        self.layout.addWidget(self.cancelAnalyzeButton)
+        self.cancel_analyze_button = QPushButton("Cancel Analyze")
+        self.cancel_analyze_button.clicked.connect(self.cancel_analyze)
+        self.layout.addWidget(self.cancel_analyze_button)
+
+    def show_result(self):
+        self.switch_page(pageIndex["Result"])
 
     def cancel_analyze(self):
-        if self.documentData.image is not None:
-            pixmap = self.pil_to_pixmap(self.documentData.image)
-            self.image.setPixmap(pixmap)
+        pass
 
     def pil_to_pixmap(self, pil_image):
         if pil_image.mode != "RGB":
