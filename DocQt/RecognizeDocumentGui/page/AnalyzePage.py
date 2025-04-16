@@ -53,6 +53,8 @@ class AnalyzePage(AbstractPage):
         return QPixmap.fromImage(qimage)
 
     def update_ui(self):
-        if self.documentData.image is not None:
-            pixmap = self.pil_to_pixmap(self.documentData.image)
+        if self.documentData.image_proc is not None:
+            pixmap = self.pil_to_pixmap(self.documentData.image_proc)
             self.image.setPixmap(pixmap)
+        else:
+            print("File not found")

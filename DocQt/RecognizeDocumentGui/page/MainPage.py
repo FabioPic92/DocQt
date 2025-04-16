@@ -6,6 +6,7 @@ from PyQt5.QtCore import pyqtSignal, Qt,  pyqtSlot
 from PyQt5.QtGui import QPixmap, QImage
 
 from PIL import Image, ExifTags
+
 from pdf2image import convert_from_path
 
 from page.AbstractPage import AbstractPage
@@ -13,8 +14,6 @@ from page.PageIndex import pageIndex
 
 from model.model import Model
 from model.AnalyzeDocument import processing_image
-
-output_file_path = 'output.txt' 
 
 class MainPage(AbstractPage):
 
@@ -25,7 +24,6 @@ class MainPage(AbstractPage):
         self.documentData = documentData
 
     def draw_ui(self):
-
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -48,9 +46,11 @@ class MainPage(AbstractPage):
     def load_analyze_file(self):
         if self.documentData.image is None:
             self.load_file()
-            self.model = Model('textextractbucket2', self.documentData)        
+            self.model = Model('textextractbucket2', self.documentData)
+            self.model.upload_file()        
         else :
             self.analyze_image()
+            print(f"Entra {self.documentData.filename}")
             self.switch_page(pageIndex["Analyze"])
 
     @pyqtSlot()
@@ -59,6 +59,7 @@ class MainPage(AbstractPage):
         if self.fileName:
             if self.fileName.lower().endswith(('.jpg', '.jpeg', '.png','.pdf')):
                 self.load_image(self.fileName)
+        self.documentData.filename = self.fileName
         self.update_ui()
 
     def load_image(self, fileName):
@@ -102,7 +103,7 @@ class MainPage(AbstractPage):
         return image
     
     def analyze_image(self):
-        self.Analyze()
+        self.analyze()
         self.postProcessing()
 
     def analyze(self):
@@ -110,7 +111,7 @@ class MainPage(AbstractPage):
         self.model.analyze_document()
 
     def postProcessing(self):
-        processing_image(self.documentData, output_file_path)
+        processing_image(self.documentData)
 
     def update_ui(self):
         if self.documentData.image is None:

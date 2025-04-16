@@ -9,12 +9,13 @@ class Model:
 
         self.bucket = bucket
         self.image = document_data.image
-
+        self.file_name = document_data.filename
+        
     # Filename: il path locale del file da caricare
     # Bucket: il nome del bucket S3
     # Key: il nome del file (e percorso virtuale) in S3
     def upload_file(self):
-        self.s3.upload_file(self.image, self.bucket, 'Test/Test.jpg')
+        self.s3.upload_file(self.file_name, self.bucket, 'Test/Test.jpg')
 
     def response(self):
         self.response = self.textract.start_document_analysis( 

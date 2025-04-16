@@ -3,6 +3,7 @@ from PIL import Image
 from typing import Optional
 from dataclasses import dataclass
 
+@dataclass
 class DocumentData:
     filename: Optional[str] = None
     image: Optional[Image.Image] = None
