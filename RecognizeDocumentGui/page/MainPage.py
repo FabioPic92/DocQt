@@ -1,4 +1,5 @@
 import os
+from qasync import asyncSlot
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog, QPushButton
@@ -11,7 +12,6 @@ from pdf2image import convert_from_path
 
 from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
-
 from model.model import Model
 from model.AnalyzeDocument import processing_image
 
@@ -43,20 +43,30 @@ class MainPage(AbstractPage):
         self.central_layout = QtWidgets.QGridLayout()
         central_wid.setLayout(self.central_layout)
 
-    def load_analyze_file(self):
-        self.documentData.filename = '/home/fpicciati/Downloads/20250223_180311.jpg'        
-        self.documentData.image = Image.open(self.documentData.filename)
-        processing_image(self.documentData)# Test
-        self.switch_page(pageIndex["Analyze"])
+    # def load_analyze_file(self):
+    #     # self.documentData.filename = '/home/fpicciati/Downloads/20250223_180311.jpg'        
+    #     # self.documentData.image = Image.open(self.documentData.filename)
+    #     # processing_image(self.documentData)# Test
+    #     # self.switch_page(pageIndex["Analyze"])
 
-        # if self.documentData.image is None:
-        #     self.load_file()
-        #     self.model = Model('textextractbucket2', self.documentData)
-        #     self.model.upload_file()        
-        # else :
-        #     self.analyze_image()
-        #     print(f"Entra {self.documentData.filename}")
-        #     self.switch_page(pageIndex["Analyze"])
+    #     if self.documentData.image is None:
+    #         self.load_file()
+    #         self.model = Model('textextractbucket2', self.documentData)
+    #         self.model.upload_file()        
+    #     else :
+    #         self.analyze_image()
+    #         print(f"Entra {self.documentData.filename}")
+    #         self.switch_page(pageIndex["Analyze"])
+
+    @asyncSlot()
+    async def load_analyze_file(self):
+        if self.documentData.image is None:
+            self.load_file()
+            self.model = Model(self.documentData)
+            # niente upload S3
+        else:
+            await self.analyze_image()
+            self.switch_page(pageIndex["Analyze"])
 
     @pyqtSlot()
     def load_file(self):
@@ -107,13 +117,23 @@ class MainPage(AbstractPage):
             pass
         return image
     
-    def analyze_image(self):
-        self.analyze()
+    # def analyze_image(self):
+    #     self.analyze()
+    #     self.postProcessing()
+
+    @asyncSlot()
+    async def analyze_image(self):
+        await self.analyze()
+        self.switch_page(pageIndex["Analyze"])
+
+    @asyncSlot()
+    async def analyze(self):
+        await self.model.analyze_document()  # async model method
         self.postProcessing()
 
-    def analyze(self):
-        self.model.response()
-        self.model.analyze_document()
+    # def analyze(self):
+    #     self.model.response()
+    #     self.model.analyze_document()
 
     def postProcessing(self):
         processing_image(self.documentData)

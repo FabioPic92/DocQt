@@ -1,18 +1,19 @@
 import sys
 import os
 
+from qasync import QEventLoop
+import asyncio
+
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QFileDialog, QLabel, QStackedWidget, QVBoxLayout
-from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal, QObject
-from PyQt5.QtGui import QIcon, QPixmap, QImage
+from PyQt5.QtWidgets import QApplication, QStackedWidget
 
 from PIL import Image, ExifTags
 
 from page.MainPage import MainPage
 from page.AnalyzePage import AnalyzePage
 from page.ResultPage import ResultPage
-
 from model.struct import DocumentData
+
 
 class RecognizeDocumentGui(QtWidgets.QMainWindow):
         def __init__(self):
@@ -53,10 +54,21 @@ class RecognizeDocumentGui(QtWidgets.QMainWindow):
             self.stack.setCurrentIndex(index)
             self.stack.currentWidget().update_ui()
 
-def main(args=None):
-    app = QtWidgets.QApplication([])
-    mw = RecognizeDocumentGui()
-    sys.exit(app.exec_())
+# def main(args=None):
+#     app = QtWidgets.QApplication([])
+#     mw = RecognizeDocumentGui()
+#     sys.exit(app.exec_())
+
+def main():
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    window = RecognizeDocumentGui()
+    window.show()
+
+    with loop:
+        loop.run_forever()
 
 if __name__ == "__main__":
     main()
