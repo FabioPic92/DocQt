@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog, QPushButt
 from PyQt5.QtCore import pyqtSignal, Qt,  pyqtSlot
 from PyQt5.QtGui import QPixmap, QImage
 
-from PIL import Image, ExifTags
+from PIL import Image, ExifTags, ImageOps
 
 from pdf2image import convert_from_path
 
@@ -86,8 +86,10 @@ class MainPage(AbstractPage):
         self.label.setText(f"Loaded: {os.path.basename(fileName)}")
         self.documentData.fileName = os.path.basename(self.fileName)
         self.documentData.image = image
-        pixmap = self.image_to_pixmap(image).scaled(400, 400, Qt.KeepAspectRatio)
+        
+        pixmap = self.image_to_pixmap(image).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.imageLabel.setPixmap(pixmap)
+        self.imageLabel.setAlignment(Qt.AlignCenter)  
 
     def image_to_pixmap(self, pilImage):
         if pilImage.mode != "RGB":
@@ -98,23 +100,7 @@ class MainPage(AbstractPage):
 
     def correct_image_rotation(self, imagePath):
         image = Image.open(imagePath)
-        try:
-            for orientation in ExifTags.TAGS.keys():
-                if ExifTags.TAGS[orientation] == 'Orientation':
-                    break
-
-            exif = image._getexif()
-            if exif is not None:
-                orientationValue = exif.get(orientation, None)
-
-                if orientationValue == 3:
-                    image = image.rotate(180, expand=True)
-                elif orientationValue == 6:
-                    image = image.rotate(270, expand=True)
-                elif orientationValue == 8:
-                    image = image.rotate(90, expand=True)
-        except (AttributeError, KeyError, IndexError):
-            pass
+        image = ImageOps.exif_transpose(image)
         return image
     
     # def analyze_image(self):
