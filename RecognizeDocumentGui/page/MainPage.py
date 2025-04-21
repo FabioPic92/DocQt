@@ -1,4 +1,6 @@
 import os
+import piexif
+import cv2
 from qasync import asyncSlot
 
 from PyQt5 import QtWidgets
@@ -12,8 +14,11 @@ from pdf2image import convert_from_path
 
 from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
+
 from model.model import Model
 from model.AnalyzeDocument import processing_image
+
+from image.DocumentScanner import scan
 
 class MainPage(AbstractPage):
 
@@ -79,33 +84,54 @@ class MainPage(AbstractPage):
 
     def load_image(self, fileName):
         if fileName.lower().endswith(('.jpg', '.jpeg', '.png')):
-            image = self.correct_image_rotation(fileName)
+            image = self.correct_image_orientation(fileName)
         elif fileName.lower().endswith('.pdf'):
             images = convert_from_path(fileName)
             image = images[0]
+        self.preprocessing_img = self.preprocessing(image)
         self.label.setText(f"Loaded: {os.path.basename(fileName)}")
         self.documentData.fileName = os.path.basename(self.fileName)
-        self.documentData.image = image
+        self.documentData.image = self.preprocessing_img
         
-        pixmap = self.image_to_pixmap(image).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pixmap = self.image_to_pixmap(self.preprocessing_img).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.imageLabel.setPixmap(pixmap)
         self.imageLabel.setAlignment(Qt.AlignCenter)  
 
-    def image_to_pixmap(self, pilImage):
-        if pilImage.mode != "RGB":
-            pilImage = pilImage.convert("RGB")
-        data = pilImage.tobytes("raw", "RGB")
-        qimage = QImage(data, pilImage.width, pilImage.height, QImage.Format_RGB888)
+    # def image_to_pixmap(self, pilImage):
+    #     if pilImage.mode != "RGB":
+    #         pilImage = pilImage.convert("RGB")
+    #     data = pilImage.tobytes("raw", "RGB")
+    #     qimage = QImage(data, pilImage.width, pilImage.height, QImage.Format_RGB888)
+    #     return QPixmap.fromImage(qimage)
+    
+    def image_to_pixmap(self, cv_img):
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        
+        height, width, channel = rgb_image.shape
+        bytes_per_line = channel * width
+        
+        qimage = QImage(rgb_image.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        
         return QPixmap.fromImage(qimage)
 
-    def correct_image_rotation(self, imagePath):
-        image = Image.open(imagePath)
-        image = ImageOps.exif_transpose(image)
+    def correct_image_orientation(self, imagePath):
+        image = cv2.imread(imagePath)
+
+        try:
+            exif_dict = piexif.load(imagePath)
+            orientation = exif_dict["0th"].get(piexif.ImageIFD.Orientation, 1)
+
+            if orientation == 3:
+                image = cv2.rotate(image, cv2.ROTATE_180)
+            elif orientation == 6:
+                image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+            elif orientation == 8:
+                image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        except Exception as e:
+            print(f"EXIF non disponibile o errore nella lettura: {e}")
+
         return image
-    
-    # def analyze_image(self):
-    #     self.analyze()
-    #     self.postProcessing()
 
     @asyncSlot()
     async def analyze_image(self):
@@ -117,9 +143,11 @@ class MainPage(AbstractPage):
         await self.model.analyze_document()  # async model method
         self.postProcessing()
 
-    # def analyze(self):
-    #     self.model.response()
-    #     self.model.analyze_document()
+    def preprocessing(self, img):
+        print("PreProcessing...")
+        img_preprocessing = scan(img)
+        print("Document Precessed")
+        return img_preprocessing
 
     def postProcessing(self):
         processing_image(self.documentData)
