@@ -8,8 +8,6 @@ from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog, QPushButt
 from PyQt5.QtCore import pyqtSignal, Qt,  pyqtSlot
 from PyQt5.QtGui import QPixmap, QImage
 
-from PIL import Image, ExifTags, ImageOps
-
 from pdf2image import convert_from_path
 
 from page.AbstractPage import AbstractPage
@@ -48,27 +46,11 @@ class MainPage(AbstractPage):
         self.central_layout = QtWidgets.QGridLayout()
         central_wid.setLayout(self.central_layout)
 
-    # def load_analyze_file(self):
-    #     # self.documentData.filename = '/home/fpicciati/Downloads/20250223_180311.jpg'        
-    #     # self.documentData.image = Image.open(self.documentData.filename)
-    #     # processing_image(self.documentData)# Test
-    #     # self.switch_page(pageIndex["Analyze"])
-
-    #     if self.documentData.image is None:
-    #         self.load_file()
-    #         self.model = Model('textextractbucket2', self.documentData)
-    #         self.model.upload_file()        
-    #     else :
-    #         self.analyze_image()
-    #         print(f"Entra {self.documentData.filename}")
-    #         self.switch_page(pageIndex["Analyze"])
-
     @asyncSlot()
     async def load_analyze_file(self):
         if self.documentData.image is None:
             self.load_file()
             self.model = Model(self.documentData)
-            # niente upload S3
         else:
             await self.analyze_image()
             self.switch_page(pageIndex["Analyze"])
@@ -90,20 +72,12 @@ class MainPage(AbstractPage):
             image = images[0]
         self.preprocessing_img = self.preprocessing(image)
         self.label.setText(f"Loaded: {os.path.basename(fileName)}")
-        self.documentData.fileName = os.path.basename(self.fileName)
-        self.documentData.image = self.preprocessing_img
+        self.documentData.image = self.preprocessing_img.copy()
         
         pixmap = self.image_to_pixmap(self.preprocessing_img).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.imageLabel.setPixmap(pixmap)
         self.imageLabel.setAlignment(Qt.AlignCenter)  
 
-    # def image_to_pixmap(self, pilImage):
-    #     if pilImage.mode != "RGB":
-    #         pilImage = pilImage.convert("RGB")
-    #     data = pilImage.tobytes("raw", "RGB")
-    #     qimage = QImage(data, pilImage.width, pilImage.height, QImage.Format_RGB888)
-    #     return QPixmap.fromImage(qimage)
-    
     def image_to_pixmap(self, cv_img):
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
         
@@ -117,19 +91,19 @@ class MainPage(AbstractPage):
     def correct_image_orientation(self, imagePath):
         image = cv2.imread(imagePath)
 
-        try:
-            exif_dict = piexif.load(imagePath)
-            orientation = exif_dict["0th"].get(piexif.ImageIFD.Orientation, 1)
+        # try:
+        #     exif_dict = piexif.load(imagePath)
+        #     orientation = exif_dict["0th"].get(piexif.ImageIFD.Orientation, 1)
 
-            if orientation == 3:
-                image = cv2.rotate(image, cv2.ROTATE_180)
-            elif orientation == 6:
-                image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-            elif orientation == 8:
-                image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        #     if orientation == 3:
+        #         image = cv2.rotate(image, cv2.ROTATE_180)
+        #     elif orientation == 6:
+        #         image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+        #     elif orientation == 8:
+        #         image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-        except Exception as e:
-            print(f"EXIF non disponibile o errore nella lettura: {e}")
+        # except Exception as e:
+        #     print(f"EXIF non disponibile o errore nella lettura: {e}")
 
         return image
 
@@ -145,8 +119,8 @@ class MainPage(AbstractPage):
 
     def preprocessing(self, img):
         print("PreProcessing...")
-        img_preprocessing = scan(img)
-        print("Document Precessed")
+        img_preprocessing = scan(img, self.documentData)
+        print("PreProcessing Done")
         return img_preprocessing
 
     def postProcessing(self):
@@ -158,6 +132,6 @@ class MainPage(AbstractPage):
             self.imageLabel.clear()
             self.LoadDocument.setText("Load Document")
         else :
-            self.label.setText(f"Loaded: {self.documentData.fileName}")
+            self.label.setText(f"Loaded: {self.documentData.filename}")
             self.LoadDocument.setText("Analyze")
             self.AddDocument.setText("Load Document")

@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import glob
 
+output_image = "ImagePreprocessed.jpg"
 
 def order_points(pts):
     rect = np.zeros((4, 2), dtype='float32')
@@ -18,8 +19,7 @@ def order_points(pts):
 
     return rect.astype('int').tolist()
 
-
-def scan(img):
+def scan(img, DocumentData):
     dim_limit = 2160
     max_dim = max(img.shape)
     if max_dim > dim_limit:
@@ -69,16 +69,6 @@ def scan(img):
     un_warped = cv2.warpPerspective(orig_img, np.float32(homography), (w, h), flags=cv2.INTER_LINEAR)
 
     final = un_warped[:destination_corners[2][1], :destination_corners[2][0]]
-    cv2.imwrite("DocumentScanner.jpg", final)
+    DocumentData.filename_image_processed = output_image
+    cv2.imwrite(output_image, final)
     return final
-
-
-# img = cv2.imread("Test1.jpg")
-
-# scanned_img = scan(img)
-
-# # cv2.imshow("scanner", scanned_img)
-# cv2.imwrite("outputs1.jpg", scanned_img)
-# print("scanned")
-
-# cv2.destroyAllWindows()

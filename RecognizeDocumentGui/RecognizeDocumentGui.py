@@ -54,11 +54,6 @@ class RecognizeDocumentGui(QtWidgets.QMainWindow):
             self.stack.setCurrentIndex(index)
             self.stack.currentWidget().update_ui()
 
-# def main(args=None):
-#     app = QtWidgets.QApplication([])
-#     mw = RecognizeDocumentGui()
-#     sys.exit(app.exec_())
-
 def main():
     app = QApplication(sys.argv)
     loop = QEventLoop(app)

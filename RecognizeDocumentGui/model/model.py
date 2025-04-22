@@ -46,18 +46,15 @@ import asyncio
 class Model:
     def __init__(self, document_data):
         self.textract = boto3.client('textract')
-        self.file_name = document_data.filename
+        self.file_name = document_data.filename_image_processed
         self.executor = concurrent.futures.ThreadPoolExecutor()
 
     async def analyze_document(self):
         loop = asyncio.get_running_loop()
 
-        # Legge il file come byte stream
         with open(self.file_name, 'rb') as file:
             document_bytes = file.read()
 
-        print("aNalazy")
-        # Chiama Textract in un thread separato per non bloccare la GUI
         result = await loop.run_in_executor(
             self.executor,
             lambda: self.textract.analyze_document(
@@ -65,10 +62,9 @@ class Model:
                 FeatureTypes=["TABLES", "FORMS"]
             )
         )
-        print("Complate")
-        # Salva il risultato in un file
+
         with open('output.json', 'w') as f:
             json.dump(result, f, indent=4)
 
         print("Analisi completata.")
-        return result  # opzionale, utile se vuoi usarlo anche in GUI
+        return result

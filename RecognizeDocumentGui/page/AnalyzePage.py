@@ -1,11 +1,11 @@
+import cv2
+
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QScrollArea, QPushButton, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QImage
 
 from page.AbstractPage import AbstractPage
 from page.PageIndex import pageIndex
-
-from PIL import Image, ExifTags
 
 class AnalyzePage(AbstractPage):
     def __init__(self, parent, documentData):
@@ -46,16 +46,19 @@ class AnalyzePage(AbstractPage):
     def cancel_analyze(self):
         pass
 
-    def pil_to_pixmap(self, pil_image):
-        if pil_image.mode != "RGB":
-            pil_image = pil_image.convert("RGB")
-        data = pil_image.tobytes("raw", "RGB")
-        qimage = QImage(data, pil_image.width, pil_image.height, QImage.Format_RGB888)
+    def image_to_pixmap(self, cv_img):
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        
+        height, width, channel = rgb_image.shape
+        bytes_per_line = channel * width
+        
+        qimage = QImage(rgb_image.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        
         return QPixmap.fromImage(qimage)
 
     def update_ui(self):
         if self.documentData.image_proc is not None:
-            pixmap = self.pil_to_pixmap(self.documentData.image_proc)
+            pixmap = self.image_to_pixmap(self.documentData.image_proc)
             self.image.setPixmap(pixmap)
         else:
             print("File not found")
