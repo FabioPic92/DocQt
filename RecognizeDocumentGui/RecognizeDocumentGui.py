@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QStackedWidget
 from page.MainPage import MainPage
 from page.AnalyzePage import AnalyzePage
 from page.ResultPage import ResultPage
-from RecognizeDocumentGui.model.data import DocumentData
+from model.data_struct import DocumentData
 
 
 class RecognizeDocumentGui(QtWidgets.QMainWindow):
