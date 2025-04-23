@@ -32,16 +32,18 @@ class AnalyzePage(AbstractPage):
         self.scroll_area.setWidgetResizable(True)
         self.layout.addWidget(self.scroll_area)
 
-        self.show_result_button = QPushButton("Show Result")
+        self.show_result_button = QPushButton("Save Result")
         self.show_result_button.clicked.connect(self.show_result)
         self.layout.addWidget(self.show_result_button)
 
         self.cancel_analyze_button = QPushButton("Cancel Analyze")
         self.cancel_analyze_button.clicked.connect(self.cancel_analyze)
+        self.cancel_analyze_button.hide()
         self.layout.addWidget(self.cancel_analyze_button)
 
     def show_result(self):
-        self.switch_page(pageIndex["Result"])
+        #self.switch_page(pageIndex["Result"])
+        pass
 
     def cancel_analyze(self):
         pass

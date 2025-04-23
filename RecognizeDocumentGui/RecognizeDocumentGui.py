@@ -7,12 +7,10 @@ import asyncio
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QStackedWidget
 
-from PIL import Image, ExifTags
-
 from page.MainPage import MainPage
 from page.AnalyzePage import AnalyzePage
 from page.ResultPage import ResultPage
-from model.struct import DocumentData
+from RecognizeDocumentGui.model.data import DocumentData
 
 
 class RecognizeDocumentGui(QtWidgets.QMainWindow):

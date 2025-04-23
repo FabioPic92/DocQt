@@ -40,6 +40,7 @@ class MainPage(AbstractPage):
         self.layout.addWidget(self.LoadDocument)
 
         self.AddDocument = QPushButton("Add Layout Document")
+        self.AddDocument.hide()
         self.layout.addWidget(self.AddDocument)
 
         central_wid = QtWidgets.QWidget()
@@ -70,11 +71,12 @@ class MainPage(AbstractPage):
         elif fileName.lower().endswith('.pdf'):
             images = convert_from_path(fileName)
             image = images[0]
+        self.documentData.image = image
         self.preprocessing_img = self.preprocessing(image)
         self.label.setText(f"Loaded: {os.path.basename(fileName)}")
-        self.documentData.image = self.preprocessing_img.copy()
+        self.documentData.image_proc = self.preprocessing_img.copy()
         
-        pixmap = self.image_to_pixmap(self.preprocessing_img).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pixmap = self.image_to_pixmap(self.documentData.image).scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.imageLabel.setPixmap(pixmap)
         self.imageLabel.setAlignment(Qt.AlignCenter)  
 
