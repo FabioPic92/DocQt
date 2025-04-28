@@ -45,7 +45,7 @@ import asyncio
         
 class Model:
     def __init__(self, document_data):
-        self.textract = boto3.client('textract')
+        self.textract = boto3.client("textract")
         self.file_name = document_data.filename_image_processed
         self.executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -58,12 +58,12 @@ class Model:
         result = await loop.run_in_executor(
             self.executor,
             lambda: self.textract.analyze_document(
-                Document={'Bytes': document_bytes},
+                Document={"Bytes": document_bytes},
                 FeatureTypes=["TABLES", "FORMS"]
             )
         )
 
-        with open('output.json', 'w') as f:
+        with open("Data/Result/output.json", "w") as f:
             json.dump(result, f, indent=4)
 
         print("Analisi completata.")

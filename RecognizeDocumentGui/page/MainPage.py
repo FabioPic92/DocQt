@@ -18,6 +18,8 @@ from model.AnalyzeDocument import processing_image
 
 from image.DocumentScanner import scan
 
+import numpy as np
+
 class MainPage(AbstractPage):
 
     def __init__(self, parent, documentData):
@@ -121,7 +123,8 @@ class MainPage(AbstractPage):
 
     def preprocessing(self, img):
         print("PreProcessing...")
-        img_preprocessing = scan(img, self.documentData)
+        img_preprocessing, document_contour = scan(img, self.documentData)
+        np.savetxt("Data/Result/document_contour.txt", document_contour.reshape(4, 2), fmt="%.3f")
         print("PreProcessing Done")
         return img_preprocessing
 

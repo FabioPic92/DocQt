@@ -1,47 +1,67 @@
 import cv2
 import numpy as np
+from imutils.perspective import four_point_transform
 
-img = cv2.imread("Test.jpg")
 
-kernel = np.ones((5,5),np.uint8)
-img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel, iterations=3)
 
-mask = np.zeros(img.shape[:2],np.uint8)
-bgdModel = np.zeros((1,65),np.float64)
-fgdModel = np.zeros((1,65),np.float64)
-rect = (20,20,img.shape[1]-20,img.shape[0]-20)
-cv2.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
-mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-img = img*mask2[:,:,np.newaxis]
+font = cv2.FONT_HERSHEY_SIMPLEX
 
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-gray = cv2.GaussianBlur(gray, (11, 11), 0)
-# Edge Detection.
-canny = cv2.Canny(gray, 0, 200)
-canny = cv2.dilate(canny, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+WIDTH, HEIGHT = 1920, 1080
 
-con = np.zeros_like(img)
+def image_processing(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-contours, hierarchy = cv2.findContours(canny, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-# Keeping only the largest detected contour.
-page = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+    _, threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-# Loop over the contours.
-for c in page:
-  # Approximate the contour.
-  epsilon = 0.02 * cv2.arcLength(c, True)
-  corners = cv2.approxPolyDP(c, epsilon, True)
-  # If our approximated contour has four points
-  if len(corners) == 4:
-      break
-cv2.drawContours(con, c, -1, (0, 255, 255), 3)
-cv2.drawContours(con, corners, -1, (0, 255, 0), 10)
-# Sorting the corners and converting them to desired shape.
-corners = sorted(np.concatenate(corners).tolist())
- 
-cv2.imwrite("immagine_salvata.jpg", corners) 
+    white_ratio = np.sum(threshold == 255) / (threshold.shape[0] * threshold.shape[1])
+    if white_ratio < 0.5:
+        threshold = cv2.bitwise_not(threshold)
 
-# # Displaying the corners.
-# for index, c in enumerate(corners):
-#   character = chr(65 + index)
-#   cv2.putText(con, character, tuple(c), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+    return threshold
+
+
+def scan_detection(image):
+    global document_contour
+
+    document_contour = np.array([[0, 0], [WIDTH, 0], [WIDTH, HEIGHT], [0, HEIGHT]])
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    _, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    max_area = 0
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 1000:
+            peri = cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, 0.03 * peri, True)
+            if area > max_area and len(approx) == 4:
+                document_contour = approx
+                max_area = area
+
+def center_text(image, text):
+    text_size = cv2.getTextSize(text, font, 2, 5)[0]
+    text_x = (image.shape[1] - text_size[0]) // 2
+    text_y = (image.shape[0] + text_size[1]) // 2
+    cv2.putText(image, text, (text_x, text_y), font, 2, (255, 0, 255), 5, cv2.LINE_AA)
+
+
+img =cv2.imread("Test4.jpg")
+
+scan_detection(img)
+
+warped = four_point_transform(img, document_contour.reshape(4, 2))
+
+cv2.imwrite("scanned_output1.jpg", warped)
+
+processed = image_processing(warped)
+processed = processed[10:processed.shape[0] - 10, 10:processed.shape[1] - 10]
+
+kernel = np.ones((2, 2), np.uint8)
+processed = cv2.morphologyEx(processed, cv2.MORPH_OPEN, kernel)
+processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
+
+cv2.imwrite("scanned_output.jpg", processed)
